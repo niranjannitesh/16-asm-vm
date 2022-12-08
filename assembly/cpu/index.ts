@@ -179,8 +179,8 @@ export default class CPU {
       case instructions.ADD_REG_REG: {
         const rX = this.fetch()
         const rY = this.fetch()
-        const rXValue = this.registers.getUint16(rX * 2)
-        const rYValue = this.registers.getUint16(rY * 2)
+        const rXValue = this.registers.getUint16(rX)
+        const rYValue = this.registers.getUint16(rY)
         this.setRegister("acc", rXValue + rYValue)
         return
       }
