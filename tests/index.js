@@ -1,4 +1,14 @@
-import assert from "assert";
-import { add } from "../build/debug.js";
-assert.strictEqual(add(1, 2), 3);
-console.log("ok");
+import { init, step } from "../build/debug.js";
+import readline from 'node:readline'
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+})
+
+init()
+
+rl.on('line', () => {
+  step(true)
+})
+
