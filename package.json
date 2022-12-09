@@ -23,5 +23,8 @@
     "asbuild": "yarn asbuild:debug && yarn asbuild:release",
     "test": "node tests",
     "start": "npx serve ."
+  },
+  "dependencies": {
+    "ansi-escapes": "^6.0.0"
   }
 }

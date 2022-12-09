@@ -11,6 +11,7 @@ enum instructions {
   CAL_LIT = 0x1a,
   CAL_REG = 0x1b,
   RET = 0x1c,
+  HLT = 0x1d,
 }
 
 export default instructions

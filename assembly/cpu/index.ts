@@ -1,14 +1,15 @@
 import { createMemory } from "../memory"
+import MemoryMapper from "../memory/memory-mapper"
 import instructions from "./instructions"
 
 export default class CPU {
-  memory: DataView
+  memory: MemoryMapper
   registerNames: string[]
   registers!: DataView
   registerMap!: Map<string, i32>
   stackFrameSize: u32
 
-  constructor(memory: DataView) {
+  constructor(memory: MemoryMapper) {
     this.memory = memory
 
     this.registerNames = [
@@ -39,7 +40,7 @@ export default class CPU {
       new Map<string, i32>()
     )
 
-    const spAddr: u16 = (memory.byteLength - 1 * 2) as u16
+    const spAddr: u16 = 0xffff - 1
 
     this.setRegister("sp", spAddr)
     this.setRegister("fp", spAddr)
@@ -138,14 +139,14 @@ export default class CPU {
     this.setRegister("fp", (framePointerAddress + stackFrameSize) as u16)
   }
 
-  exec(instruction: u8): void {
+  exec(instruction: u8): boolean {
     switch (instruction) {
       // move 0x1000 r1
       case instructions.MOV_LIT_REG: {
         const literal = this.fetch16()
         const reg = this.fetch()
         this.registers.setUint16(reg, literal)
-        return
+        return false
       }
 
       // mov r1 r2
@@ -154,7 +155,7 @@ export default class CPU {
         const toReg = this.fetch()
         const value = this.registers.getUint16(fromReg)
         this.registers.setUint16(toReg, value)
-        return
+        return false
       }
 
       // mov r1 0x0001
@@ -163,7 +164,7 @@ export default class CPU {
         const addr = this.fetch16()
         const value = this.registers.getUint16(fromReg)
         this.memory.setUint16(addr, value)
-        return
+        return false
       }
 
       // mov 0x0001 r1
@@ -172,7 +173,7 @@ export default class CPU {
         const toReg = this.fetch()
         const value = this.memory.getUint16(addr)
         this.registers.setUint16(toReg, value)
-        return
+        return false
       }
 
       // add r1 r2
@@ -182,7 +183,7 @@ export default class CPU {
         const rXValue = this.registers.getUint16(rX)
         const rYValue = this.registers.getUint16(rY)
         this.setRegister("acc", rXValue + rYValue)
-        return
+        return false
       }
 
       // jne 0x1000
@@ -192,14 +193,14 @@ export default class CPU {
         if (value != this.getRegister("acc")) {
           this.setRegister("ip", addr)
         }
-        return
+        return false
       }
 
       // psh 0x1000
       case instructions.PSH_LIT: {
         const value = this.fetch16()
         this.push(value)
-        return
+        return false
       }
 
       // psh r1
@@ -207,14 +208,14 @@ export default class CPU {
         const reg = this.fetch()
         const value = this.registers.getUint16(reg)
         this.push(value)
-        return
+        return false
       }
 
       // pop r1
       case instructions.POP_REG: {
         const reg = this.fetch()
         this.registers.setUint16(reg, this.pop())
-        return
+        return false
       }
 
       // cal 0x2454
@@ -222,7 +223,7 @@ export default class CPU {
         const addr = this.fetch16()
         this.pushState()
         this.setRegister("ip", addr)
-        return
+        return false
       }
 
       // cal r3
@@ -231,20 +232,36 @@ export default class CPU {
         const addr = this.registers.getUint16(reg)
         this.pushState()
         this.setRegister("ip", addr)
-        return
+        return false
       }
 
       // ret
       case instructions.RET: {
         this.popState()
-        return
+        return false
+      }
+
+      // hlt
+      case instructions.HLT: {
+        return true
+      }
+
+      default: {
+        throw new Error(`Unknown instruction: ${instruction}`)
       }
     }
   }
 
-  step(): void {
+  step(): boolean {
     const instruction = this.fetch()
     return this.exec(instruction)
+  }
+
+  run(): void {
+    const halt = this.step()
+    if (!halt) {
+      this.run()
+    }
   }
 
   viewMemoryAt(addr: i32, n: u32 = 8): void {

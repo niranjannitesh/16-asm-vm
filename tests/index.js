@@ -1,14 +1,3 @@
-import { init, step } from "../build/debug.js";
-import readline from 'node:readline'
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
+import { init } from "../build/debug.js"
 
 init()
-
-rl.on('line', () => {
-  step(true)
-})
-
