@@ -1,13 +1,9 @@
-// The entry file of your WebAssembly module.
-
-
-
 import CPU from "./cpu"
 import { createMemory } from "./memory"
 import MemoryMapper from "./memory/memory-mapper"
 import instructions from "./cpu/instructions"
 import ScreenDevice from "./devices/screen"
-@external("./screen-writer.js", "screenWriter")
+@external("../screen-writer/index.js", "screenWriter")
 declare function screenWriter(address: i32, value: u16): void;
 
 let i = 0
